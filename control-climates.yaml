@@ -1,0 +1,57 @@
+blueprint:
+  name: Controller → Follower Climate Control
+  description: >
+    Control one group of "controller" climate entities and automatically manage
+    another group of "follower" climate entities.
+
+    • If ANY controller climate is ON (hvac_mode != 'off'), ALL follower climates are turned OFF.  
+    • If ALL controller climates are OFF, ALL follower climates are turned ON.  
+    • Also runs at Home Assistant startup to reconcile states.
+  domain: automation
+  source_url: https://github.com/dlahoza/homeassistant-blueprints/blob/main/control-climates.yaml
+
+  input:
+    controller_climates:
+      name: Controller climates
+      description: Climates whose state determines follower behaviour.
+      selector:
+        entity:
+          domain: climate
+          multiple: true
+    follower_climates:
+      name: Follower climates
+      description: Climates that are switched based on controllers.
+      selector:
+        entity:
+          domain: climate
+          multiple: true
+
+mode: restart
+
+trigger:
+  - platform: state
+    entity_id: !input controller_climates
+  - platform: homeassistant
+    event: start
+
+variables:
+  controllers: !input controller_climates
+  followers: !input follower_climates
+
+action:
+  - choose:
+      # If any controller is ON → turn all followers OFF
+      - conditions: >
+          {{ expand(controllers) | selectattr('state','ne','off') | list | count > 0 }}
+        sequence:
+          - service: climate.turn_off
+            target:
+              entity_id: !input follower_climates
+
+      # If all controllers are OFF → turn all followers ON
+      - conditions: >
+          {{ expand(controllers) | selectattr('state','eq','off') | list | count == controllers | count }}
+        sequence:
+          - service: climate.turn_on
+            target:
+              entity_id: !input follower_climates
