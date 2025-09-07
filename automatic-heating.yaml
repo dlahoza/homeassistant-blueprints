@@ -1,0 +1,70 @@
+blueprint:
+  name: Automatic Heating
+  description: Turn on heating when any thermostat is heating or any binary sensor is on
+  domain: automation
+  input:
+    thermostats:
+      name: Thermostats
+      selector:
+        entity:
+          filter:
+            - domain: climate
+          multiple: true
+    binary_sensors:
+      name: Binary Sensors
+      default: []
+      selector:
+        entity:
+          filter:
+            - domain: binary_sensor
+          multiple: true
+    heating_valve:
+      name: Heating Valve
+      description: Valves to control
+      selector:
+        entity:
+          filter:
+            - domain: valve
+    heating_switch:
+      name: Heating Switch
+      description: Optional switches to control
+      default: []
+      selector:
+        entity:
+          filter:
+            - domain: switch
+mode: restart
+max_exceeded: silent
+variables:
+  thermostats: !input thermostats
+  binary_sensors: !input binary_sensors
+triggers:
+  - trigger: state
+    entity_id: !input thermostats
+    attribute: hvac_action
+  - trigger: state
+    entity_id: !input binary_sensors
+  - trigger: homeassistant
+    event: start
+action:
+  - variables:
+      is_heating: >
+        {% set heating_thermostats = expand(thermostats) | selectattr('attributes.hvac_action', 'eq', 'heating') | list %}
+        {% set active_sensors = expand(binary_sensors) | selectattr('state', 'eq', 'on') | list %}
+        {{ heating_thermostats | length > 0 or active_sensors | length > 0 }}
+  - choose:
+      - conditions: "{{ is_heating }}"
+        sequence:
+          - action: switch.turn_on
+            target:
+              entity_id: !input heating_switch
+          - action: valve.open_valve
+            target:
+              entity_id: !input heating_valve
+    default:
+      - action: switch.turn_off
+        target:
+          entity_id: !input heating_switch
+      - action: valve.close_valve
+        target:
+          entity_id: !input heating_valve
