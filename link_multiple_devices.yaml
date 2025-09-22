@@ -1,0 +1,32 @@
+blueprint:
+  name: Link On/Off State of Multiple Devices
+  description: Sync switch devices state
+  domain: automation
+  homeassistant:
+    min_version: 2022.5.0
+  input:
+    linked_entities:
+      name: Entities to link
+      selector:
+        entity:
+          multiple: true
+mode: queued
+max_exceeded: silent
+variables:
+  linked_entities: !input linked_entities
+trigger:
+  - platform: state
+    entity_id: !input linked_entities
+condition:
+  - condition: template
+    value_template: "{{ trigger.to_state.state != trigger.from_state.state }}"
+  - condition: template
+    value_template:
+      '{{ (trigger.to_state.state == "on") or (trigger.to_state.state
+      == "off") }}'
+action:
+  - service: homeassistant.turn_{{ trigger.to_state.state }}
+    target:
+      entity_id:
+        '{{ expand(linked_entities) | selectattr("entity_id", "!=", trigger.entity_id)
+        | map(attribute="entity_id") | list }}'
