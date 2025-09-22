@@ -28,7 +28,7 @@ blueprint:
     follower_hvac_mode:
       name: Follower HVAC Mode
       description: HVAC mode to set when turning on follower climates.
-      default: auto
+      default: heat
       selector:
         select:
           options:
@@ -54,9 +54,7 @@ action:
       - conditions: >
           {{ expand(controllers) | selectattr('state','ne','off') | list | count > 0 }}
         sequence:
-          - service: climate.set_hvac_mode
-            data:
-              hvac_mode: "off"
+          - service: climate.turn_off
             target:
               entity_id: !input follower_climates
 
@@ -64,6 +62,9 @@ action:
       - conditions: >
           {{ expand(controllers) | selectattr('state','eq','off') | list | count == controllers | count }}
         sequence:
+          - service: climate.turn_on
+            target:
+              entity_id: !input follower_climates
           - service: climate.set_hvac_mode
             data:
               hvac_mode: !input follower_hvac_mode
