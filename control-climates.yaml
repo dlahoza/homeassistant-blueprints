@@ -53,26 +53,31 @@ variables:
   controllers: !input controller_climates
   followers: !input follower_climates
   follower_mode: !input follower_hvac_mode
+  set_follower_hvac_mode_input: !input set_follower_hvac_mode
 
 action:
   - choose:
       # If any controller is ON → turn all followers OFF
-      - conditions: >
-          {{ expand(controllers) | selectattr('state','ne','off') | list | count > 0 }}
+      - conditions:
+          - condition: template
+            value_template: "{{ expand(controllers) | selectattr('state','ne','off') | list | count > 0 }}"
         sequence:
           - service: climate.turn_off
             target:
               entity_id: !input follower_climates
 
       # If all controllers are OFF → turn all followers ON
-      - conditions: >
-          {{ expand(controllers) | selectattr('state','eq','off') | list | count == controllers | count }}
+      - conditions:
+          - condition: template
+            value_template: "{{ expand(controllers) | selectattr('state','eq','off') | list | count == controllers | count }}"
         sequence:
           - service: climate.turn_on
             target:
               entity_id: !input follower_climates
           - choose:
-              - conditions: "{{ !input set_follower_hvac_mode }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ set_follower_hvac_mode_input }}"
                 sequence:
                   - delay: 2 # slight delay to ensure climates are ready to accept new hvac_mode
                   - service: climate.set_hvac_mode
