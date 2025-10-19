@@ -16,14 +16,16 @@ blueprint:
       description: Climates whose state determines follower behaviour.
       selector:
         entity:
-          domain: climate
+          filter:
+            - domain: climate
           multiple: true
     follower_climates:
       name: Follower climates
       description: Climates that are switched based on controllers.
       selector:
         entity:
-          domain: climate
+          filter:
+            - domain: climate
           multiple: true
     set_follower_hvac_mode:
       name: Set follower HVAC Mode
@@ -44,9 +46,9 @@ blueprint:
 mode: restart
 
 trigger:
-  - platform: state
+  - trigger: state
     entity_id: !input controller_climates
-  - platform: homeassistant
+  - trigger: homeassistant
     event: start
 
 variables:
@@ -62,7 +64,7 @@ action:
           - condition: template
             value_template: "{{ expand(controllers) | selectattr('state','ne','off') | list | count > 0 }}"
         sequence:
-          - service: climate.turn_off
+          - action: climate.turn_off
             target:
               entity_id: !input follower_climates
 
@@ -71,7 +73,7 @@ action:
           - condition: template
             value_template: "{{ expand(controllers) | selectattr('state','eq','off') | list | count == controllers | count }}"
         sequence:
-          - service: climate.turn_on
+          - action: climate.turn_on
             target:
               entity_id: !input follower_climates
           - choose:
@@ -80,7 +82,7 @@ action:
                     value_template: "{{ set_follower_hvac_mode_input }}"
                 sequence:
                   - delay: 2 # slight delay to ensure climates are ready to accept new hvac_mode
-                  - service: climate.set_hvac_mode
+                  - action: climate.set_hvac_mode
                     data:
                       hvac_mode: !input follower_hvac_mode
                     target:
