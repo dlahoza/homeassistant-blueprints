@@ -25,6 +25,12 @@ blueprint:
         entity:
           domain: climate
           multiple: true
+    set_follower_hvac_mode:
+      name: Set follower HVAC Mode
+      description: Enable this to set the follower climates' HVAC mode when turning them on.
+      default: false
+      selector:
+        boolean: {}
     follower_hvac_mode:
       name: Follower HVAC Mode
       description: HVAC mode to set when turning on follower climates.
@@ -65,8 +71,12 @@ action:
           - service: climate.turn_on
             target:
               entity_id: !input follower_climates
-          - service: climate.set_hvac_mode
-            data:
-              hvac_mode: !input follower_hvac_mode
-            target:
-              entity_id: !input follower_climates
+          - choose:
+              - conditions: "{{ !input set_follower_hvac_mode }}"
+                sequence:
+                  - delay: 2 # slight delay to ensure climates are ready to accept new hvac_mode
+                  - service: climate.set_hvac_mode
+                    data:
+                      hvac_mode: !input follower_hvac_mode
+                    target:
+                      entity_id: !input follower_climates
