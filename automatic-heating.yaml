@@ -26,6 +26,10 @@ blueprint:
         entity:
           filter:
             - domain: valve
+            - domain: switch
+            - domain: light
+          multiple: true
+
     heating_switch:
       name: Heating Switch
       description: Optional switches to control
