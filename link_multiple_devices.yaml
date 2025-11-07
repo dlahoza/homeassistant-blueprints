@@ -1,6 +1,7 @@
 blueprint:
   name: Link On/Off State of Multiple Devices
   description: Sync switch devices state
+  source_url: https://github.com/dlahoza/homeassistant-blueprints/blob/main/link_multiple_devices.yaml
   domain: automation
   homeassistant:
     min_version: 2022.5.0
