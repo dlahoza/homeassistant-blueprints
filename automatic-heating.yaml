@@ -22,6 +22,7 @@ blueprint:
     heating_valve:
       name: Heating Valve
       description: Valves to control
+      default: []
       selector:
         entity:
           filter:
