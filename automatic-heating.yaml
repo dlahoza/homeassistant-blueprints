@@ -36,6 +36,7 @@ blueprint:
         entity:
           filter:
             - domain: switch
+          multiple: true
 
     heating_light_switch:
       name: Heating Light Switch
@@ -45,6 +46,7 @@ blueprint:
         entity:
           filter:
             - domain: light
+          multiple: true
 
 mode: restart
 max_exceeded: silent
